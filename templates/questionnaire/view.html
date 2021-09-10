@@ -1,0 +1,29 @@
+{% extends "questionnaire/base.html" %}
+
+{% block head %}
+<style>
+</style>
+{% endblock %}
+
+{% block content %}
+    <h1>Questionnaire #{{ questionnaire.id }}: {{ questionnaire.title }}</h1>
+    <div>Title: {{ questionnaire.title }}</div>
+    <div id="total-distance"></div>
+    <p>&nbsp;</p>
+    <div>
+        <table>
+        <tr>
+            <th>ID</th>
+            <th colspan="2">Position</th>
+            <th>Time</th>
+        </tr>
+        {% for question in questionnaire.questions %}
+        <tr>
+            <td>#{{ question.id }}</td>
+            <td>({{ question.text }}, </td>
+            <td>{{ question.creation_time }}</td>
+        </tr>
+        {% endfor %}
+        </table>
+    </div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "questionnaire/base.html" %}
+
+{% block head %}
+<style>
+</style>
+{% endblock %}
+
+{% block content %}
+    <h1>Questionnaires</h1>
+    <div>
+        <table>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Creation time</th>
+            <th></th>
+        </tr>
+        {% for questionnaire in questionnaires %}
+        <tr>
+            <td>{{ questionnaire.id }}</td>
+            <td>{{ questionnaire.title }}</td>
+            <td>{{ questionnaire.creation_time }}</td>
+            <td><a href="{{ url_for('view_questionnaire', questionnaire_id=questionnaire.id) }}">Info</a></td>
+        </tr>
+        {% endfor %}
+        </table>
+    </div>
+{% endblock %}
