@@ -63,10 +63,10 @@ def view_questionnaire(questionnaire_id=0):
     'properties': {
         'title': {'type': 'string'}
     },
-    'required': ['title', 'rideType']
+    'required': ['title']
 })
 @authentication_required
-def create_question(current_user: AdminUser):
+def create_questionnaire(current_user: AdminUser):
     data = g.data
     app.logger.info("Create Questionnaire")
     app.logger.debug("Request=({})".format(data))
