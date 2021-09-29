@@ -80,6 +80,99 @@ def create_questionnaire(current_user: AdminUser):
     return jsonify({'error': True, 'errorMessage': 'Unable to create new questionnaire.'}), 500
 
 
+@app.route('/user/create', methods=['POST'])
+@expects_json({
+    'type': 'object',
+    'properties': {
+        'username': {'type': 'string'},
+        'firstname': {'type': 'string'},
+        'lastname': {'type': 'string'},
+        'gender': {'type': 'string'},              # TODO: convert to enum
+        'email': {'type': 'string'},
+        'password': {'type': 'string'},
+        'profile_image_path': {'type': 'string'}
+    },
+    'required': ['username', 'firstname', 'lastname', 'gender', 'email', 'password']
+})
+def create_user():
+    data = g.data
+    app.logger.info("Create Questionnaire")
+    app.logger.debug("Request=({})".format(data))
+
+    with app.app_context():
+        user = dm.User(username=data['username'], firstname=data['firstname'], lastname=data['lastname'],
+                       gender=dm.GenderType.FEMALE, email=data['email'], password=data['password'])
+        user.profile_image_path = data.get('profile_image_path', None)
+        db.session.add(user)
+        db.session.commit()
+        return jsonify({'error': False, 'userData': {"userID": user.id}}), 200
+
+    return jsonify({'error': True, 'errorMessage': 'Unable to create new user.'}), 500
+
+
+@app.route('/user/password/change', methods=['POST'])
+@expects_json({
+    'type': 'object',
+    'properties': {
+        'userID': {'type': 'integer'},
+        'oldPassword': {'type': 'string'},
+        'newPassword': {'type': 'string'}
+    },
+    'required': ['userID', 'oldPassword', 'newPassword']
+})
+@authentication_required
+def change_password():
+    data = g.data
+    app.logger.info("Change user password")
+    app.logger.debug("Request=({})".format(data))
+
+    with app.app_context():
+        user = db.session.query(dm.User).filter(dm.User.id == data['userID']).first()
+        if user is None:
+            abort(404)
+
+        if user.password != data['oldPassword']:
+            return jsonify({'error': True, 'errorMessage': 'Old password is incorrect.'}), 400
+
+        user.password = data['newPassword']
+        db.session.add(user)
+        db.session.commit()
+        return jsonify({'error': False, 'userData': {"userID": user.id}}), 200
+
+    return jsonify({'error': True, 'errorMessage': 'Unable to create new user.'}), 500
+
+# TODO: upload image request
+
+
+@app.route('/user/delete', methods=['POST'])
+@expects_json({
+    'type': 'object',
+    'properties': {
+        'userID': {'type': 'integer'},
+        'reason': {'type': 'string'}              # TODO: convert to enum
+    },
+    'required': ['userID', 'reason']
+})
+@authentication_required
+def delete_account():
+    data = g.data
+    app.logger.info("Delete user account")
+    app.logger.debug("Request=({})".format(data))
+
+    with app.app_context():
+        user = db.session.query(dm.User).filter(dm.User.id == data['userID']).first()
+        if user is None:
+            abort(404)
+
+        # TODO: convert reason to enum!
+        user.delete_account(reason=dm.DeleteReasonType.OTHER)
+        db.session.add(user)
+        db.session.commit()
+        return jsonify({'error': False, 'userData': {"userID": user.id}}), 200
+
+    return jsonify({'error': True, 'errorMessage': 'Unable to create new user.'}), 500
+
+
 def create_app():
     CORS(app)
     app.secret_key = app.config['SECRET_KEY']
@@ -88,6 +181,7 @@ def create_app():
 
     with app.app_context():
         dm.db.create_all()
+        # TODO: default entries (e.g., standard questionnaires, etc.)
         dm.db.session.commit()
         create_and_add_admin_users_to_database(app.config)
 
