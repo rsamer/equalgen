@@ -17,9 +17,18 @@ SECRET_KEY = '&39HwX)a!ru{XKKYr(4D'  # app.config.get('SECRET_KEY') TODO: outsou
 BCRYPT_LOG_ROUNDS = 4  # app.config.get('BCRYPT_LOG_ROUNDS') TODO: outsource!!
 
 
-class RideType(enum.Enum):
-    BUSINESS = 1
-    PRIVATE = 2
+class GenderType(enum.Enum):
+    MALE = 1
+    FEMALE = 2
+    DIVERSE = 3
+
+
+class DeleteReasonType(enum.Enum):
+    OTHER = 0
+    DUPLICATE = 1
+    NO_INTEREST = 2
+    TOO_EXPENSIVE = 3
+    PRIVACY_CONCERNS = 4
 
 
 class AdminUser(db.Model):
@@ -106,11 +115,43 @@ class User(db.Model):
     username = db.Column(db.String(255), nullable=False)
     firstname = db.Column(db.String(255), nullable=False)
     lastname = db.Column(db.String(255), nullable=False)
+    gender = db.Column(db.Enum(GenderType), nullable=False)
     email = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    is_active = db.Column(db.Boolean, unique=False, default=True)
+    is_banned = db.Column(db.Boolean, unique=False, default=False)
+    is_deleted = db.Column(db.Boolean, unique=False, default=False)
     profile_image_path = db.Column(db.String(255), nullable=True)
     creation_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     last_update_time = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    last_login_time = db.Column(db.DateTime, default=None, nullable=True)
+    deletion_time = db.Column(db.DateTime, default=None, nullable=True)
+    deletion_reason = db.Column(db.Enum(DeleteReasonType), nullable=False)
+
+    def __init__(self, username: str, firstname: str, lastname: str, gender: GenderType, email: str, password: str):
+        self.username = username
+        self.firstname = firstname
+        self.lastname = lastname
+        self.gender = gender
+        self.email = email
+        self.password = password
+        self.is_active = False
+        self.last_login_time = None
+        self.deletion_time = None
+
+    def perform_login(self):
+        # TODO: add entry to activity log...
+        self.last_login_time = datetime.utcnow()
+
+    def ban_account(self):
+        # TODO: add ban entry to activity log...
+        self.is_banned = True
+
+    def delete_account(self, reason: DeleteReasonType):
+        # TODO: add deleted entry to activity log...
+        self.is_deleted = True
+        self.deletion_time = datetime.utcnow()
+        self.deletion_reason = reason
 
     def __repr__(self):
         return '<User #%d> "%s %s"' % (self.id, self.firstname, self.lastname)
