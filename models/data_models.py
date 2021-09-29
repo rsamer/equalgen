@@ -175,6 +175,13 @@ class Questionnaire(db.Model):
         return sha.hexdigest()
 
 
+class ProfileQuestionnaire(Questionnaire):
+    questionnaire_type = db.Column(db.Enum(GenderType), nullable=False)
+
+    def __repr__(self):
+        return '<ProfileQuestionnaire #%d: (%s) "%s">' % (self.id, self.questionnaire_type, self.title)
+
+
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     text = db.Column(db.String(255), nullable=False)
