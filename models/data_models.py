@@ -101,6 +101,21 @@ class BlacklistToken(db.Model):
         return False
 
 
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(255), nullable=False)
+    firstname = db.Column(db.String(255), nullable=False)
+    lastname = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    profile_image_path = db.Column(db.String(255), nullable=True)
+    creation_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    last_update_time = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def __repr__(self):
+        return '<User #%d> "%s %s"' % (self.id, self.firstname, self.lastname)
+
+
 class Questionnaire(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(255), nullable=False)
