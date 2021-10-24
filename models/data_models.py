@@ -5,7 +5,7 @@ from error_handling.auth_exception import AuthException
 from datetime import datetime, timedelta
 from flask_bcrypt import Bcrypt
 from flask import redirect
-import enum
+from models.constants import *
 import hashlib
 import jwt
 
@@ -15,20 +15,6 @@ bcrypt = Bcrypt()
 basic_auth = BcryptBasicAuth(bcrypt=bcrypt)
 SECRET_KEY = '&39HwX)a!ru{XKKYr(4D'  # app.config.get('SECRET_KEY') TODO: outsource!!
 BCRYPT_LOG_ROUNDS = 4  # app.config.get('BCRYPT_LOG_ROUNDS') TODO: outsource!!
-
-
-class GenderType(enum.Enum):
-    MALE = 1
-    FEMALE = 2
-    DIVERSE = 3
-
-
-class DeleteReasonType(enum.Enum):
-    OTHER = 0
-    DUPLICATE = 1
-    NO_INTEREST = 2
-    TOO_EXPENSIVE = 3
-    PRIVACY_CONCERNS = 4
 
 
 class AdminUser(db.Model):
@@ -116,6 +102,10 @@ class User(db.Model):
     firstname = db.Column(db.String(255), nullable=False)
     lastname = db.Column(db.String(255), nullable=False)
     gender = db.Column(db.Enum(GenderType), nullable=False)
+    phone_country_code = db.Column(db.Enum(CountryPhonePrefixCode), nullable=True)
+    phone = db.Column(db.String(255), nullable=True)
+    country = db.Column(db.Enum(CountryCode), nullable=False)
+    birthday = db.Column(db.DateTime, nullable=False)
     email = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
     is_active = db.Column(db.Boolean, unique=False, default=True)
