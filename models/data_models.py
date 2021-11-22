@@ -116,16 +116,21 @@ class User(db.Model):
     last_update_time = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     last_login_time = db.Column(db.DateTime, default=None, nullable=True)
     deletion_time = db.Column(db.DateTime, default=None, nullable=True)
-    deletion_reason = db.Column(db.Enum(DeleteReasonType), nullable=False)
+    deletion_reason = db.Column(db.Enum(DeleteReasonType), nullable=True)
 
-    def __init__(self, username: str, firstname: str, lastname: str, gender: GenderType, email: str, password: str):
+    def __init__(self, username: str, firstname: str, lastname: str, gender: GenderType, birthday: datetime,
+                 country: str, email: str, password: str):
         self.username = username
         self.firstname = firstname
         self.lastname = lastname
         self.gender = gender
+        self.birthday = birthday
+        self.country = country
         self.email = email
         self.password = password
         self.is_active = False
+        self.is_banned = False
+        self.is_deleted = False
         self.last_login_time = None
         self.deletion_time = None
 
@@ -150,7 +155,7 @@ class User(db.Model):
 class Questionnaire(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(255), nullable=False)
-    questions = db.relationship('Question', lazy='select', backref=db.backref('question', lazy='select'),
+    questions = db.relationship('Question', lazy='select', backref=db.backref('questionnaire', lazy='select'),
                                 cascade="all, delete-orphan")
     creation_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     last_update_time = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -176,12 +181,29 @@ class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     text = db.Column(db.String(255), nullable=False)
     image_path = db.Column(db.String(255), nullable=True)
+    answers = db.relationship('Answer', lazy='select', backref=db.backref('question', lazy='select'),
+                              cascade="all, delete-orphan")
     questionnaire_id = db.Column(db.Integer, db.ForeignKey('questionnaire.id'), nullable=False)
     creation_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     last_update_time = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
+    def __init__(self, title: str, image_path: str):
+        self.title = title
+        self.image_path = image_path
+
     def __repr__(self):
         return '<Question #%d> "%s"' % (self.id, self.text)
+
+
+class Answer(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    text = db.Column(db.String(255), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
+    creation_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    last_update_time = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def __repr__(self):
+        return '<Answer #%d> "%s"' % (self.id, self.text)
 
 
 class StandardModelView(ModelView):
