@@ -4,11 +4,13 @@ from flask import render_template
 from flask_cors import CORS
 from flask_admin import Admin
 from flask_expects_json import expects_json
-from models.data_models import AdminUser
+from models.data_models import AdminUser, ProfileQuestionnaire
+from models.constants import GenderType, CountryCode
 from authentication.auth_blueprint import auth_blueprint
 from authentication import authentication_required
 from models import data_models as dm
 from models.data_models import db
+from datetime import datetime
 from flask import abort
 import os
 
@@ -84,15 +86,16 @@ def create_questionnaire(current_user: AdminUser):
 @expects_json({
     'type': 'object',
     'properties': {
-        'username': {'type': 'string'},
-        'firstname': {'type': 'string'},
-        'lastname': {'type': 'string'},
-        'gender': {'type': 'string'},              # TODO: convert to enum
+        'username': {'type': 'string', 'minLength': 2, 'maxLength': 50},
+        'firstname': {'type': 'string', 'minLength': 2, 'maxLength': 255},
+        'lastname': {'type': 'string', 'minLength': 2, 'maxLength': 255},
+        'gender': {'type': 'string', 'minLength': 1, 'maxLength': 1},  # TODO: convert to enum
+        'birthday': {'type': 'string'},
         'email': {'type': 'string'},
         'password': {'type': 'string'},
         'profile_image_path': {'type': 'string'}
     },
-    'required': ['username', 'firstname', 'lastname', 'gender', 'email', 'password']
+    'required': ['username', 'firstname', 'lastname', 'gender', 'birthday', 'email', 'password']
 })
 def create_user():
     data = g.data
@@ -100,9 +103,14 @@ def create_user():
     app.logger.debug("Request=({})".format(data))
 
     with app.app_context():
+        birthday = datetime.fromisoformat(data['birthday'] + " 00:00:00")
+        country = CountryCode.AUSTRIA  # FIXME: convert enum
+        gender = dm.GenderType.FEMALE  # FIXME: convert enum
         user = dm.User(username=data['username'], firstname=data['firstname'], lastname=data['lastname'],
-                       gender=dm.GenderType.FEMALE, email=data['email'], password=data['password'])
+                       gender=gender, birthday=birthday, country=country, email=data['email'],
+                       password=data['password'])
         user.profile_image_path = data.get('profile_image_path', None)
+        #ProfileQuestionnaire(gender)
         db.session.add(user)
         db.session.commit()
         return jsonify({'error': False, 'userData': {"userID": user.id}}), 200
@@ -153,7 +161,8 @@ def change_password():
     },
     'required': ['userID', 'reason']
 })
-@authentication_required
+# FIXME: authentication required!!
+#@authentication_required
 def delete_account():
     data = g.data
     app.logger.info("Delete user account")
@@ -181,7 +190,12 @@ def create_app():
 
     with app.app_context():
         dm.db.create_all()
+
         # TODO: default entries (e.g., standard questionnaires, etc.)
+        questionnaire = ProfileQuestionnaire(title='Profile Questionnaire', questionnaire_type=GenderType.MALE)
+        questionnaire.questions = []
+        #db.session.add(questionnaire)
+
         dm.db.session.commit()
         create_and_add_admin_users_to_database(app.config)
 
