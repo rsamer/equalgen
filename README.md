@@ -1,5 +1,3 @@
-# Driver's Logbook
+# EqualGen
 
-A simple FLASK-based web service that stores locations tracked by a mobile app and visualizes previous driving routes using the Google Maps API.
-The purpose of this service is to estimate and log driving distances.
-This helps professionals to easily track distances.
+Official API of the EqualGen web service - a project to foster gender equality which should pave the way for equal opportunities for women as well as children and socially disadvantaged persons left behind.
